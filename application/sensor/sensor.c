@@ -57,6 +57,9 @@
 #include "sensor.h"
 #include <advanced_config.h>
 #include "ti_154stack_config.h"
+#include <driverlib/aon_batmon.h>
+// Import ADC Driver definitions
+#include <ti/drivers/ADC.h>
 
 #ifdef FEATURE_NATIVE_OAD
 #include "oad_client.h"
@@ -108,6 +111,9 @@
 #define CONFIG_AUTO_START 0
 #endif
 #endif
+
+/* define max voltage of battery*/
+#define MAX_BATTERY_VOLTAGE 3
 
 /* default MSDU Handle rollover */
 #define MSDU_HANDLE_MAX 0x1F
@@ -1464,15 +1470,6 @@ static void processSensorMsgEvt(void)
     Smsgs_sensorMsg_t sensor;
     uint32_t stat;
 
-    typedef struct _Smsgs_lightSensor
-    {
-        uint16_t rawData;
-    } Smsgs_lightSensor;
-
-    Smsgs_lightSensor customLightSensor;
-
-    customLightSensor.rawData = 99;
-
     memset(&sensor, 0, sizeof(Smsgs_sensorMsg_t));
 
     ApiMac_mlmeGetReqUint32(ApiMac_attribute_diagRxSecureFail, &stat);
@@ -1545,6 +1542,28 @@ static void processSensorMsgEvt(void)
     sendSensorMessage(&collectorAddr, &sensor);
 }
 
+//Function to read humidity sensor
+uint16_t read_humidity_sensor(void){
+
+    // One-time init of ADC driver
+    ADC_init(); //ADC initialization
+
+    ADC_Handle adc;
+    ADC_Params params;
+    ADC_Params_init(&params);
+    adc = ADC_open(CONFIG_ADC_1, &params); //using pin 0 for adc
+    int_fast16_t res;
+    uint16_t hum;
+    res = ADC_convert(adc, &hum); //adc sampling
+    if (res == ADC_STATUS_SUCCESS)
+    {
+        ADC_close(adc); //close adc
+        return(hum);
+    }
+    ADC_close(adc); //close adc
+    return -1;
+}
+
 /*!
  * @brief   Manually read the sensors
  */
@@ -1558,9 +1577,14 @@ static void readSensors(void)
 #ifdef LPSTK
     Lpstk_Accelerometer accel;
     humiditySensor.temp = (uint16_t)Lpstk_getTemperature();
-    humiditySensor.humidity = (uint16_t)Lpstk_getHumidity();
+    humiditySensor.humidity = read_humidity_sensor();;
     hallEffectSensor.flux = Lpstk_getMagFlux();
-    lightSensor.rawData = (uint16_t)Lpstk_getLux();
+    uint32_t milivolts = (AONBatMonBatteryVoltageGet()* 125) >> 5;
+    uint16_t percent = (milivolts*100)/3000;
+    if (percent > 100){
+        percent = 100;
+    }
+    lightSensor.rawData = percent;
     Lpstk_getAccelerometer(&accel);
     accelerometerSensor.xAxis = accel.x;
     accelerometerSensor.yAxis = accel.y;
