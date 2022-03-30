@@ -1490,7 +1490,7 @@ static void processSensorMsgEvt(void)
     }
     if(sensor.frameControl & Smsgs_dataFields_lightSensor)
     {
-        memcpy(&sensor.lightSensor, &customLightSensor,
+        memcpy(&sensor.lightSensor, &lightSensor,
                sizeof(Smsgs_lightSensorField_t));
     }
     if(sensor.frameControl & Smsgs_dataFields_humiditySensor)
