@@ -255,6 +255,7 @@ static const NVINTF_itemID_t nvResetId = NVID_RESET;
 static bool started = false;
 
 static bool led1State = false;
+static bool led2State = false;
 
 #ifndef CUI_DISABLE
 CUI_clientHandle_t ssfCuiHndl;
@@ -1752,6 +1753,38 @@ bool Ssf_toggleLED(void)
     }
 
     return(led1State);
+}
+
+/*!
+ The application calls this function to turn on an LED.
+
+ Public function defined in ssf.h
+ */
+bool Ssf_turnOnLED(void)
+{
+    led2State = true;
+#ifndef POWER_MEAS
+    LED_stopBlinking(gGreenLedHandle);
+    LED_setOn(gGreenLedHandle, LED_BRIGHTNESS_MAX);
+#endif /* !POWER_MEAS */
+
+    return(led2State);
+}
+
+/*!
+ The application calls this function to turn off an LED.
+
+ Public function defined in ssf.h
+ */
+bool Ssf_turnOffLED(void)
+{
+    led2State = false;
+#ifndef POWER_MEAS
+    LED_stopBlinking(gGreenLedHandle);
+    LED_setOff(gGreenLedHandle);
+#endif /* !POWER_MEAS */
+
+    return(led2State);
 }
 
 /*!
