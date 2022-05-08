@@ -1578,7 +1578,7 @@ static void readSensors(void)
 #ifdef LPSTK
     Lpstk_Accelerometer accel;
     humiditySensor.temp = (uint16_t)Lpstk_getTemperature();
-    humiditySensor.humidity = read_humidity_sensor();;
+    humiditySensor.humidity = read_humidity_sensor();
     hallEffectSensor.flux = Lpstk_getMagFlux();
     uint32_t milivolts = (AONBatMonBatteryVoltageGet()* 125) >> 5;
     uint16_t percent = (milivolts*100)/3000;
