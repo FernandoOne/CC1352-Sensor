@@ -113,8 +113,17 @@
 #endif
 #endif
 
-/* define max voltage of battery*/
-#define MAX_BATTERY_VOLTAGE 3
+/* Max voltage of battery */
+#define MAX_BATTERY_VOLTAGE 7.3
+
+/* Cantidad de cuentas del adc */
+#define DIGITAL_VALUES_ADC 4096
+
+/* Vref adc */
+#define VREF_ADC 4.3
+
+/* Volts/Count */
+#define ADC_K 1.0498
 
 /* default MSDU Handle rollover */
 #define MSDU_HANDLE_MAX 0x1F
@@ -162,6 +171,8 @@
 /******************************************************************************
  Global variables
  *****************************************************************************/
+
+
 /* MAC's IEEE address. This is only for Sensor */
 extern ApiMac_sAddrExt_t ApiMac_extAddr;
 
@@ -188,6 +199,10 @@ Smsgs_powerMeastatsField_t Sensor_pwrMeasStats =
 /******************************************************************************
  Local variables
  *****************************************************************************/
+/* adc constant */
+
+float adc_k= 1.0498;
+
 
 static void *sem;
 
@@ -1587,19 +1602,46 @@ uint16_t read_humidity_sensor(void){
     // One-time init of ADC driver
     ADC_init(); //ADC initialization
 
-    ADC_Handle adc;
-    ADC_Params params;
-    ADC_Params_init(&params);
-    adc = ADC_open(CONFIG_ADC_1, &params); //using pin 0 for adc
-    int_fast16_t res;
+    ADC_Handle adc_h;
+    ADC_Params params_h;
+    ADC_Params_init(&params_h);
+    adc_h = ADC_open(HUMIDITY_SENSOR_ADC, &params_h); //using pin 0 for adc
+    int_fast16_t res_h;
     uint16_t hum;
-    res = ADC_convert(adc, &hum); //adc sampling
-    if (res == ADC_STATUS_SUCCESS)
+    float hum_v;
+    uint16_t hum_percent;
+    res_h = ADC_convert(adc_h, &hum); //adc sampling
+    if (res_h == ADC_STATUS_SUCCESS)
     {
-        ADC_close(adc); //close adc
+        hum_v = hum * adc_k;
+        ADC_close(adc_h); //close adc
         return(hum);
     }
-    ADC_close(adc); //close adc
+    ADC_close(adc_h); //close adc
+    return -1;
+}
+
+//Function to read battery
+uint16_t read_battery(void){
+
+    // One-time init of ADC driver
+    //ADC_init(); //ADC initialization
+
+    ADC_Handle adc_b;
+    ADC_Params params_b;
+    ADC_Params_init(&params_b);
+    adc_b = ADC_open(BATTERY_ADC, &params_b); //using DIO 29
+    int_fast16_t res_b;
+    uint16_t bat;
+    uint16_t bat_v; //Variable que tenga el valor de tension
+    res_b = ADC_convert(adc_b, &bat); //adc sampling
+    if (res_b == ADC_STATUS_SUCCESS)
+    {
+
+        ADC_close(adc_b); //close adc
+        return(bat);
+    }
+    ADC_close(adc_b); //close adc
     return -1;
 }
 
@@ -1608,11 +1650,7 @@ uint16_t read_humidity_sensor(void){
  */
 static void readSensors(void)
 {
-#if defined(TEMP_SENSOR)
-    /* Read the temp sensor values */
-    tempSensor.ambienceTemp = Ssf_readTempSensor();
-    tempSensor.objectTemp =  tempSensor.ambienceTemp;
-#endif
+
 #ifdef LPSTK
     Lpstk_Accelerometer accel;
     humiditySensor.temp = (uint16_t)Lpstk_getTemperature();
@@ -1631,6 +1669,11 @@ static void readSensors(void)
     accelerometerSensor.xTiltDet = accel.xTiltDet;
     accelerometerSensor.yTiltDet = accel.yTiltDet;
 #endif /* LPSTK */
+#if defined(TEMP_SENSOR)
+    /* Read the temp sensor values */
+    tempSensor.ambienceTemp = humiditySensor.humidity *1000 + percent;//Ssf_readTempSensor();
+    tempSensor.objectTemp =  tempSensor.ambienceTemp;
+#endif
 }
 
 /*!
