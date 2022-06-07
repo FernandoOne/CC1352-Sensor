@@ -29,6 +29,7 @@ const GPIO        = scripting.addModule("/ti/drivers/GPIO");
 const GPIO1       = GPIO.addInstance();
 const GPIO2       = GPIO.addInstance();
 const GPIO3       = GPIO.addInstance();
+const GPIO9       = GPIO.addInstance();
 const I2C         = scripting.addModule("/ti/drivers/I2C");
 const I2C1        = I2C.addInstance();
 const NVS         = scripting.addModule("/ti/drivers/NVS");
@@ -121,13 +122,14 @@ dmm.policyArray[2].ti154Sensor.weight              = 1;
 ADC1.$name                = "CONFIG_ADC_0";
 ADC1.$hardware            = bp_LPSTKCC1352RSENSORS.components.DRV5055.subComponents.OUTPUT;
 ADC1.adcPinInstance.$name = "CONFIG_PIN_DRV_OUT";
+ADC1.adc.adcPin.$assign   = "boosterpack.2";
 
 ADC2.$name                = "HUMIDITY_SENSOR_ADC";
-ADC2.adc.adcPin.$assign   = "boosterpack.6";
+ADC2.adc.adcPin.$assign   = "boosterpack.26";
 ADC2.adcPinInstance.$name = "CONFIG_PIN_0";
 
 ADC3.$name                = "BATTERY_ADC";
-ADC3.adc.adcPin.$assign   = "boosterpack.27";
+ADC3.adc.adcPin.$assign   = "boosterpack.6";
 ADC3.adcPinInstance.$name = "CONFIG_PIN_4";
 
 AESCCM1.$name = "CONFIG_AESCCM0";
@@ -151,6 +153,12 @@ GPIO2.pinInstance.$name = "CONFIG_PIN_OPT_INT";
 GPIO3.$name             = "CONFIG_GPIO_HDC_INT";
 GPIO3.$hardware         = bp_LPSTKCC1352RSENSORS.components.HDC2080.subComponents.ALERT;
 GPIO3.pinInstance.$name = "CONFIG_PIN_HDC_INT";
+
+GPIO9.$name             = "HUMIDITY_SENSOR_EN";
+GPIO9.mode              = "Output";
+GPIO9.outputStrength    = "High";
+GPIO9.gpioPin.$assign   = "boosterpack.24";
+GPIO9.pinInstance.$name = "CONFIG_PIN_5";
 
 I2C1.$name                = "CONFIG_I2C_0";
 I2C1.$hardware            = bp_LPSTKCC1352RSENSORS.components.LPSTK_I2C;
@@ -228,7 +236,6 @@ ti154stack.radioConfig.codeExportConfig.$name = "ti_devices_radioconfig_code_exp
  * re-solve from scratch.
  */
 ADC1.adc.$suggestSolution                                         = "ADC0";
-ADC1.adc.adcPin.$suggestSolution                                  = "boosterpack.2";
 ADC2.adc.$suggestSolution                                         = "ADC0";
 ADC3.adc.$suggestSolution                                         = "ADC0";
 GPIO1.gpioPin.$suggestSolution                                    = "boosterpack.8";

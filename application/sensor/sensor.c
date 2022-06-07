@@ -1604,8 +1604,10 @@ uint16_t read_humidity_sensor(void){
 
     ADC_Handle adc_h;
     ADC_Params params_h;
+    GPIO_toggle(HUMIDITY_SENSOR_EN); //activo el sensor de humedad
+
     ADC_Params_init(&params_h);
-    adc_h = ADC_open(HUMIDITY_SENSOR_ADC, &params_h); //using pin 0 for adc
+    adc_h = ADC_open(HUMIDITY_SENSOR_ADC, &params_h); //using DIO26 for adc3
     int_fast16_t res_h;
     uint16_t hum;
     float hum_v;
@@ -1615,9 +1617,11 @@ uint16_t read_humidity_sensor(void){
     {
         hum_v = hum * adc_k;
         ADC_close(adc_h); //close adc
+        GPIO_toggle(HUMIDITY_SENSOR_EN); //desactivo el sensor de humedad
         return(hum);
     }
     ADC_close(adc_h); //close adc
+    GPIO_toggle(HUMIDITY_SENSOR_EN); //desactivo el sensor de humedad
     return -1;
 }
 
@@ -1630,7 +1634,7 @@ uint16_t read_battery(void){
     ADC_Handle adc_b;
     ADC_Params params_b;
     ADC_Params_init(&params_b);
-    adc_b = ADC_open(BATTERY_ADC, &params_b); //using DIO 29
+    adc_b = ADC_open(BATTERY_ADC, &params_b); //using DIO 24
     int_fast16_t res_b;
     uint16_t bat;
     uint16_t bat_v; //Variable que tenga el valor de tension
@@ -1656,12 +1660,13 @@ static void readSensors(void)
     humiditySensor.temp = (uint16_t)Lpstk_getTemperature();
     humiditySensor.humidity = read_humidity_sensor();
     hallEffectSensor.flux = Lpstk_getMagFlux();
-    uint32_t milivolts = (AONBatMonBatteryVoltageGet()* 125) >> 5;
-    uint16_t percent = (milivolts*100)/3000;
-    if (percent > 100){
-        percent = 100;
-    }
-    lightSensor.rawData = percent;
+    //uint32_t milivolts = (AONBatMonBatteryVoltageGet()* 125) >> 5;
+    //uint16_t percent = (milivolts*100)/3000;
+    //if (percent > 100){
+        //percent = 100;
+    //}
+    //lightSensor.rawData = percent;
+    lightSensor.rawData =read_battery();
     Lpstk_getAccelerometer(&accel);
     accelerometerSensor.xAxis = accel.x;
     accelerometerSensor.yAxis = accel.y;
@@ -1671,7 +1676,7 @@ static void readSensors(void)
 #endif /* LPSTK */
 #if defined(TEMP_SENSOR)
     /* Read the temp sensor values */
-    tempSensor.ambienceTemp = humiditySensor.humidity *1000 + percent;//Ssf_readTempSensor();
+    tempSensor.ambienceTemp = Ssf_readTempSensor();//humiditySensor.humidity *1000 + percent;
     tempSensor.objectTemp =  tempSensor.ambienceTemp;
 #endif
 }
