@@ -1605,7 +1605,7 @@ uint16_t read_humidity_sensor(void){
     ADC_Handle adc_h;
     ADC_Params params_h;
     GPIO_toggle(HUMIDITY_SENSOR_EN); //activo el sensor de humedad
-
+    sleep(30);
     ADC_Params_init(&params_h);
     adc_h = ADC_open(HUMIDITY_SENSOR_ADC, &params_h); //using DIO26 for adc3
     int_fast16_t res_h;
