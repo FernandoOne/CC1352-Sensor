@@ -1596,6 +1596,31 @@ static void processSensorMsgEvt(void)
     sendSensorMessage(&collectorAddr, &sensor);
 }
 
+// Function to convert ADC counts to Volts
+float counts_to_volts(uint16_t humidity_counts_adc){
+
+     float volts;
+
+     volts = 4.3 / 4096 * humidity_counts_adc;
+
+     return volts;
+
+}
+
+//Function to convert volts to humidity
+uint16_t volts_to_humidity (float volts){
+
+    float coeff[4]  = {-23.95 , 167.06 , -393.78 , 338.09};
+
+    uint16_t humidity=0;
+
+    humidity = coeff[0]*volts*volts*volts + coeff[1]*volts*volts + coeff[2]*volts + coeff[3];
+
+    return humidity;
+
+
+}
+
 //Function to read humidity sensor
 uint16_t read_humidity_sensor(void){
 
@@ -1604,26 +1629,30 @@ uint16_t read_humidity_sensor(void){
 
     ADC_Handle adc_h;
     ADC_Params params_h;
+    float volts; //variable con la tensión de humedad
+    int_fast16_t res_h;
+    uint16_t hum; //Defino la variable que va a contener la cantidad de cuentas de humedad
+    uint16_t hum_percent; //variable con el porcentaje de humedad
     GPIO_toggle(HUMIDITY_SENSOR_EN); //activo el sensor de humedad
     sleep(30);
     ADC_Params_init(&params_h);
     adc_h = ADC_open(HUMIDITY_SENSOR_ADC, &params_h); //using DIO26 for adc3
-    int_fast16_t res_h;
-    uint16_t hum;
-    float hum_v;
-    uint16_t hum_percent;
     res_h = ADC_convert(adc_h, &hum); //adc sampling
-    if (res_h == ADC_STATUS_SUCCESS)
+    if (res_h == ADC_STATUS_SUCCESS) //si el sampleo fue exitoso
     {
-        hum_v = hum * adc_k;
+        volts = counts_to_volts(hum); //Obtengo la cantidad de volts
+        hum_percent = volts_to_humidity(volts);
         ADC_close(adc_h); //close adc
         GPIO_toggle(HUMIDITY_SENSOR_EN); //desactivo el sensor de humedad
-        return(hum);
+        return(hum_percent);
     }
     ADC_close(adc_h); //close adc
     GPIO_toggle(HUMIDITY_SENSOR_EN); //desactivo el sensor de humedad
     return -1;
 }
+
+
+
 
 //Function to read battery
 uint16_t read_battery(void){
