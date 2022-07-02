@@ -115,17 +115,6 @@
 #endif
 #endif
 
-/* Max voltage of battery */
-#define MAX_BATTERY_VOLTAGE 7.3
-
-/* Cantidad de cuentas del adc */
-#define DIGITAL_VALUES_ADC 4096
-
-/* Vref adc */
-#define VREF_ADC 4.3
-
-/* Volts/Count */
-#define ADC_K 1.0498
 
 /* default MSDU Handle rollover */
 #define MSDU_HANDLE_MAX 0x1F
@@ -201,10 +190,6 @@ Smsgs_powerMeastatsField_t Sensor_pwrMeasStats =
 /******************************************************************************
  Local variables
  *****************************************************************************/
-/* adc constant */
-
-float adc_k= 1.0498;
-
 
 static void *sem;
 
@@ -1661,6 +1646,13 @@ uint16_t read_humidity_sensor(void){
         volts = counts_to_volts(hum); //Obtengo la cantidad de volts
         hum_percent = volts_to_humidity(volts);
         ADC_close(adc_h); //close adc
+        if(hum_percent > 100){
+            hum_percent = 100;
+        }
+        //if(hum_percent < 0){
+            //hum_percent = 0;
+        //}
+
         GPIO_toggle(HUMIDITY_SENSOR_EN); //desactivo el sensor de humedad
         return(hum_percent);
     }
@@ -1691,6 +1683,12 @@ uint16_t read_battery(void){
     {
         volts = counts_to_volts(bat);
         bat_percent = volts_to_battery(volts);
+        if(bat_percent > 100){
+            bat_percent = 100;
+        }
+        //if(bat_percent < 0){
+            //bat_percent = 0;
+        //}
         ADC_close(adc_b); //close adc
         return(bat_percent);
     }
@@ -1725,7 +1723,28 @@ static void readSensors(void)
 #endif /* LPSTK */
 #if defined(TEMP_SENSOR)
     /* Read the temp sensor values */
-    tempSensor.ambienceTemp = humiditySensor.humidity *1000 + lightSensor.rawData;//Ssf_readTempSensor();
+    uint16_t ble_humidity; //creo variable de humedad para bluetooth a enviar
+    uint16_t ble_battery; //creo variable de bateria para bluetooth a enviar
+
+    if(humiditySensor.humidity ==100){ //chequeo si es 100 la humedad
+        ble_humidity = 10000; //si es 100 mando un 1 al inicio del numero de 5 digitos
+    }
+    else{
+        ble_humidity = humiditySensor.humidity*100; //sino solo lo multiplico por 100 para dejar dos digitos libres
+    }
+
+    if(lightSensor.rawData ==100){  //chequeo si es 100 la bateria
+            ble_battery = 20000; //si es 100 mando un 2 al inicio del numero de 5 digitos
+    }
+    else{
+            ble_battery = lightSensor.rawData; //sino lo dejo asi nomas
+    }
+    //0 XX YY => HUMEDAD XX    BATERIA YY
+    //1 00 YY => HUMDAD 100   BATERIA YY
+    //2 XX 00  => HUMEDAD XX  BATERIA 100
+    //3 00 00 => HUMEDAD 100    BATERIA 100
+    tempSensor.ambienceTemp = ble_humidity + ble_battery; //Ssf_readTempSensor();
+
     tempSensor.objectTemp =  tempSensor.ambienceTemp;
 #endif
 }
