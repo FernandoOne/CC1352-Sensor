@@ -50,6 +50,8 @@
 //comentario
 #include <string.h>
 #include <stdint.h>
+#include <unistd.h>
+#include <stddef.h>
 #include "mac_util.h"
 #include "api_mac.h"
 #include "jdllc.h"
@@ -1597,11 +1599,11 @@ static void processSensorMsgEvt(void)
 }
 
 // Function to convert ADC counts to Volts
-float counts_to_volts(uint16_t humidity_counts_adc){
+float counts_to_volts(uint16_t adc_counts){
 
      float volts;
 
-     volts = 4.3 / 4096 * humidity_counts_adc;
+     volts = 4.3 / 4096 * adc_counts;
 
      return volts;
 
@@ -1617,6 +1619,22 @@ uint16_t volts_to_humidity (float volts){
     humidity = coeff[0]*volts*volts*volts + coeff[1]*volts*volts + coeff[2]*volts + coeff[3];
 
     return humidity;
+
+
+}
+
+//Function to convert volts to battery
+uint16_t volts_to_battery (float volts){
+
+    float factor = 3.3/7.5; //factor que va de 7.5 a 3.3
+    float v_real; //variable que almacena el voltaje real
+    uint16_t percent; //variabel con porcentaje de bateria
+
+    v_real = volts/factor;
+
+    percent = v_real * 100 / 7.5;
+
+    return percent;
 
 
 }
@@ -1662,17 +1680,19 @@ uint16_t read_battery(void){
 
     ADC_Handle adc_b;
     ADC_Params params_b;
+    float volts;//Variable que tenga el valor de tension de la bateria
+    uint16_t bat; //variable con las cuentas de adc de leer la bateria
+    uint16_t bat_percent; //variable con el porcentaje de bateria
     ADC_Params_init(&params_b);
     adc_b = ADC_open(BATTERY_ADC, &params_b); //using DIO 24
     int_fast16_t res_b;
-    uint16_t bat;
-    uint16_t bat_v; //Variable que tenga el valor de tension
     res_b = ADC_convert(adc_b, &bat); //adc sampling
     if (res_b == ADC_STATUS_SUCCESS)
     {
-
+        volts = counts_to_volts(bat);
+        bat_percent = volts_to_battery(volts);
         ADC_close(adc_b); //close adc
-        return(bat);
+        return(bat_percent);
     }
     ADC_close(adc_b); //close adc
     return -1;
@@ -1705,7 +1725,7 @@ static void readSensors(void)
 #endif /* LPSTK */
 #if defined(TEMP_SENSOR)
     /* Read the temp sensor values */
-    tempSensor.ambienceTemp = Ssf_readTempSensor();//humiditySensor.humidity *1000 + percent;
+    tempSensor.ambienceTemp = humiditySensor.humidity *1000 + lightSensor.rawData;//Ssf_readTempSensor();
     tempSensor.objectTemp =  tempSensor.ambienceTemp;
 #endif
 }
