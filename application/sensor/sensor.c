@@ -1611,13 +1611,13 @@ uint16_t volts_to_humidity (float volts){
 //Function to convert volts to battery
 uint16_t volts_to_battery (float volts){
 
-    float factor = 3.3/7.5; //factor que va de 7.5 a 3.3
+    float factor = 3.3/7.3; //factor que va de 7.5 a 3.3
     float v_real; //variable que almacena el voltaje real
     uint16_t percent; //variabel con porcentaje de bateria
 
     v_real = volts/factor;
 
-    percent = v_real * 100 / 7.5;
+    percent = v_real * 100 / 7.3;
 
     return percent;
 
@@ -1636,8 +1636,8 @@ uint16_t read_humidity_sensor(void){
     int_fast16_t res_h;
     uint16_t hum; //Defino la variable que va a contener la cantidad de cuentas de humedad
     uint16_t hum_percent; //variable con el porcentaje de humedad
-    GPIO_toggle(HUMIDITY_SENSOR_EN); //activo el sensor de humedad
-    sleep(30);
+    //GPIO_toggle(HUMIDITY_SENSOR_EN); //activo el sensor de humedad
+    //sleep(30);
     ADC_Params_init(&params_h);
     adc_h = ADC_open(HUMIDITY_SENSOR_ADC, &params_h); //using DIO26 for adc3
     res_h = ADC_convert(adc_h, &hum); //adc sampling
@@ -1653,11 +1653,11 @@ uint16_t read_humidity_sensor(void){
             //hum_percent = 0;
         //}
 
-        GPIO_toggle(HUMIDITY_SENSOR_EN); //desactivo el sensor de humedad
+        //GPIO_toggle(HUMIDITY_SENSOR_EN); //desactivo el sensor de humedad
         return(hum_percent);
     }
     ADC_close(adc_h); //close adc
-    GPIO_toggle(HUMIDITY_SENSOR_EN); //desactivo el sensor de humedad
+    //GPIO_toggle(HUMIDITY_SENSOR_EN); //desactivo el sensor de humedad
     return -1;
 }
 
