@@ -1613,18 +1613,20 @@ uint16_t volts_to_battery (float volts){
 
     float factor = 3.3/7.3; //factor que va de 7.5 a 3.3
     float v_real; //variable que almacena el voltaje real
-    uint16_t percent; //variabel con porcentaje de bateria
+    uint16_t m_batt = 34;
+    uint16_t b_batt = 152;
+    uint16_t percent; //variable con porcentaje de bateria
 
     v_real = volts/factor;
 
-    percent = v_real * 100 / 7.3;
+    percent = m_batt*v_real - b_batt;
 
     return percent;
 
 
 }
 
-//Function to read humidity sensor
+//Funcion que lee el sensor de humedad
 uint16_t read_humidity_sensor(void){
 
     // One-time init of ADC driver
@@ -1636,8 +1638,8 @@ uint16_t read_humidity_sensor(void){
     int_fast16_t res_h;
     uint16_t hum; //Defino la variable que va a contener la cantidad de cuentas de humedad
     uint16_t hum_percent; //variable con el porcentaje de humedad
-    //GPIO_toggle(HUMIDITY_SENSOR_EN); //activo el sensor de humedad
-    //sleep(30);
+    GPIO_toggle(HUMIDITY_SENSOR_EN); //activo el sensor de humedad
+    sleep(30);
     ADC_Params_init(&params_h);
     adc_h = ADC_open(HUMIDITY_SENSOR_ADC, &params_h); //using DIO26 for adc3
     res_h = ADC_convert(adc_h, &hum); //adc sampling
@@ -1649,15 +1651,13 @@ uint16_t read_humidity_sensor(void){
         if(hum_percent > 100){
             hum_percent = 100;
         }
-        //if(hum_percent < 0){
-            //hum_percent = 0;
-        //}
 
-        //GPIO_toggle(HUMIDITY_SENSOR_EN); //desactivo el sensor de humedad
+
+        GPIO_toggle(HUMIDITY_SENSOR_EN); //desactivo el sensor de humedad
         return(hum_percent);
     }
     ADC_close(adc_h); //close adc
-    //GPIO_toggle(HUMIDITY_SENSOR_EN); //desactivo el sensor de humedad
+    GPIO_toggle(HUMIDITY_SENSOR_EN); //desactivo el sensor de humedad
     return -1;
 }
 
@@ -1743,7 +1743,7 @@ static void readSensors(void)
     //1 00 YY => HUMDAD 100   BATERIA YY
     //2 XX 00  => HUMEDAD XX  BATERIA 100
     //3 00 00 => HUMEDAD 100    BATERIA 100
-    tempSensor.ambienceTemp = ble_humidity + ble_battery; //Ssf_readTempSensor();
+    tempSensor.ambienceTemp = ble_humidity + ble_battery; //Envío los datos
 
     tempSensor.objectTemp =  tempSensor.ambienceTemp;
 #endif
