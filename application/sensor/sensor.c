@@ -1613,8 +1613,8 @@ uint16_t volts_to_battery (float volts){
 
     float factor = 3.3/7.3; //factor que va de 7.5 a 3.3
     float v_real; //variable que almacena el voltaje real
-    uint16_t m_batt = 34;
-    uint16_t b_batt = 152;
+    uint16_t m_batt = 71;
+    uint16_t b_batt =421;
     uint16_t percent; //variable con porcentaje de bateria
 
     v_real = volts/factor;
