@@ -1605,7 +1605,6 @@ uint16_t volts_to_humidity (float volts){
 
     return humidity;
 
-
 }
 
 //Function to convert volts to battery
@@ -1622,7 +1621,6 @@ uint16_t volts_to_battery (float volts){
     percent = m_batt*v_real - b_batt;
 
     return percent;
-
 
 }
 
@@ -1664,11 +1662,8 @@ uint16_t read_humidity_sensor(void){
 
 
 
-//Function to read battery
+//Funcion para leet la bateria
 uint16_t read_battery(void){
-
-    // One-time init of ADC driver
-    //ADC_init(); //ADC initialization
 
     ADC_Handle adc_b;
     ADC_Params params_b;
@@ -1707,12 +1702,6 @@ static void readSensors(void)
     humiditySensor.temp = (uint16_t)Lpstk_getTemperature();
     humiditySensor.humidity = read_humidity_sensor();
     hallEffectSensor.flux = Lpstk_getMagFlux();
-    //uint32_t milivolts = (AONBatMonBatteryVoltageGet()* 125) >> 5;
-    //uint16_t percent = (milivolts*100)/3000;
-    //if (percent > 100){
-        //percent = 100;
-    //}
-    //lightSensor.rawData = percent;
     lightSensor.rawData =read_battery();
     Lpstk_getAccelerometer(&accel);
     accelerometerSensor.xAxis = accel.x;
